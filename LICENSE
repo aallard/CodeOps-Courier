@@ -1,0 +1,51 @@
+# CodeOps-Courier Licensing
+
+This software is dual-licensed under the terms described below.
+
+## Open Source License (Default)
+
+Copyright (C) 2025 Adam A. Allard
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+## Commercial License
+
+For commercial licensing options that do not require compliance with the
+AGPL v3 (including the network use disclosure requirement), please contact:
+
+    adam.allard@gmail.com
+
+Commercial licenses are available for organizations that:
+- Cannot comply with AGPL v3 open source requirements
+- Require proprietary modifications without source disclosure
+- Need to integrate CodeOps-Courier into closed-source products
+- Want dedicated support and indemnification
+
+## Which License Applies?
+
+- If you use this software over a network, you must make the complete
+  source code available to users under AGPL v3, OR obtain a commercial license.
+- If you modify this software and distribute it, you must release your
+  modifications under AGPL v3, OR obtain a commercial license.
+- If neither condition applies to your use case, you may use this software
+  under AGPL v3 at no cost.
+
+## AGPL v3 Full Text
+
+The complete text of the GNU Affero General Public License v3 is available at:
+https://www.gnu.org/licenses/agpl-3.0.txt
+
+---
+
+SPDX-License-Identifier: AGPL-3.0-or-later
