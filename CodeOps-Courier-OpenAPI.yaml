@@ -1,0 +1,38 @@
+openapi: 3.0.1
+info:
+  title: CodeOps-Courier API
+  description: "Full-featured API testing and development platform for the CodeOps\
+    \ ecosystem. Manages workspaces, collections, requests, environments, test suites,\
+    \ and execution history."
+  contact:
+    name: CodeOps Team
+  version: 1.0.0
+servers:
+- url: http://localhost:8099
+  description: Local development
+security:
+- bearerAuth: []
+tags:
+- name: Health
+  description: Public health check endpoint
+paths:
+  /api/v1/courier/health:
+    get:
+      tags:
+      - Health
+      operationId: health
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
