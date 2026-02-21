@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: codeops-courier
+  profiles:
+    active: dev
+  jpa:
+    open-in-view: false
+
+server:
+  port: 8099

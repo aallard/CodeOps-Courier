@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- ============================================================== -->
+    <!-- DEV profile: human-readable console output with MDC fields     -->
+    <!-- ============================================================== -->
+    <springProfile name="dev">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level [%X{correlationId:-none}] [%X{userId:-anon}] %logger{36} — %msg%n</pattern>
+            </encoder>
+        </appender>
+
+        <logger name="com.codeops.courier" level="DEBUG"/>
+        <logger name="org.hibernate.SQL" level="DEBUG"/>
+        <logger name="org.springframework.security" level="DEBUG"/>
+        <logger name="org.springframework.web" level="DEBUG"/>
+
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <!-- ============================================================== -->
+    <!-- PROD profile: JSON-structured output for log aggregation       -->
+    <!-- ============================================================== -->
+    <springProfile name="prod">
+        <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <includeMdcKeyName>correlationId</includeMdcKeyName>
+                <includeMdcKeyName>userId</includeMdcKeyName>
+                <includeMdcKeyName>teamId</includeMdcKeyName>
+                <includeMdcKeyName>requestPath</includeMdcKeyName>
+            </encoder>
+        </appender>
+
+        <logger name="com.codeops.courier" level="INFO"/>
+        <logger name="org.hibernate.SQL" level="WARN"/>
+        <logger name="org.springframework.security" level="WARN"/>
+        <logger name="org.springframework.web" level="WARN"/>
+
+        <root level="INFO">
+            <appender-ref ref="JSON_CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <!-- ============================================================== -->
+    <!-- TEST profile: minimal output at WARN to keep test logs clean   -->
+    <!-- ============================================================== -->
+    <springProfile name="test">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%-5level %logger{36} — %msg%n</pattern>
+            </encoder>
+        </appender>
+
+        <logger name="com.codeops.courier" level="WARN"/>
+        <logger name="org.hibernate.SQL" level="WARN"/>
+        <logger name="org.springframework.security" level="WARN"/>
+
+        <root level="WARN">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <!-- ============================================================== -->
+    <!-- Default (no profile): fallback to human-readable console       -->
+    <!-- ============================================================== -->
+    <springProfile name="default">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level [%X{correlationId:-none}] [%X{userId:-anon}] %logger{36} — %msg%n</pattern>
+            </encoder>
+        </appender>
+
+        <logger name="com.codeops.courier" level="INFO"/>
+
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+</configuration>

@@ -1,0 +1,34 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5438/codeops_courier
+    username: ${DB_USERNAME:codeops}
+    password: ${DB_PASSWORD:codeops}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  flyway:
+    enabled: false
+
+codeops:
+  jwt:
+    secret: ${JWT_SECRET:dev-secret-key-minimum-32-characters-long-for-hs256}
+  cors:
+    allowed-origins: http://localhost:3000,http://localhost:3200,http://localhost:5173
+  services:
+    server-url: http://localhost:8095
+    registry-url: http://localhost:8096
+    vault-url: http://localhost:8097
+    logger-url: http://localhost:8098
+
+logging:
+  level:
+    com.codeops.courier: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
