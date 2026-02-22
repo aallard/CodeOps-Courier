@@ -16,5 +16,7 @@ public interface EnvironmentVariableRepository extends JpaRepository<Environment
 
     List<EnvironmentVariable> findByEnvironmentIdAndIsEnabledTrue(UUID environmentId);
 
+    List<EnvironmentVariable> findByCollectionIdAndIsEnabledTrue(UUID collectionId);
+
     void deleteByEnvironmentId(UUID environmentId);
 }
