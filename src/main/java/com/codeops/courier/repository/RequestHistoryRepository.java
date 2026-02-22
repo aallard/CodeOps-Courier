@@ -23,4 +23,10 @@ public interface RequestHistoryRepository extends JpaRepository<RequestHistory, 
     List<RequestHistory> findByTeamIdAndRequestUrlContainingIgnoreCase(UUID teamId, String urlFragment);
 
     void deleteByTeamIdAndCreatedAtBefore(UUID teamId, Instant cutoff);
+
+    void deleteByTeamId(UUID teamId);
+
+    long countByTeamId(UUID teamId);
+
+    List<RequestHistory> findByTeamIdAndCreatedAtBefore(UUID teamId, Instant cutoff);
 }
