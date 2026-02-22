@@ -1,397 +1,501 @@
-# CodeOps-Courier — Codebase Audit
+# CodeOps-Courier Codebase Audit
 
-**Audit Date:** 2026-02-21T01:14:37Z
-**Branch:** main
-**Commit:** 4acf54b9f93dd0814b0de8823586e7a75b23d97a CC-001: CodeOps-Courier project skeleton
-**Auditor:** Claude Code (Automated)
-**Purpose:** Zero-context reference for AI-assisted development
-**Audit File:** CodeOps-Courier-Audit.md
-**Scorecard:** CodeOps-Courier-Scorecard.md
-**OpenAPI Spec:** CodeOps-Courier-OpenAPI.yaml
-
-> This audit is the single source of truth for the CodeOps-Courier codebase.
-> The OpenAPI spec (CodeOps-Courier-OpenAPI.yaml) is the source of truth for all endpoints, DTOs, and API contracts.
-> An AI reading this audit + the OpenAPI spec should be able to generate accurate code
-> changes, new features, tests, and fixes without filesystem access.
+**Generated:** 2026-02-22
+**Commit:** `8ed00ac2860115f48a0f568597ec46e96c3b2ea2`
+**Branch:** `main`
+**Remote:** `https://github.com/AI-CodeOps/CodeOps-Courier.git`
 
 ---
 
 ## 1. Project Identity
 
-```
-Project Name:         CodeOps-Courier
-Repository URL:       https://github.com/aallard/CodeOps-Courier.git
-Primary Language:     Java / Spring Boot 3.3.0
-Java Version:         21 (running on Java 25)
-Build Tool:           Maven (spring-boot-starter-parent 3.3.0)
-Current Branch:       main
-Latest Commit Hash:   4acf54b9f93dd0814b0de8823586e7a75b23d97a
-Latest Commit Msg:    CC-001: CodeOps-Courier project skeleton
-Audit Timestamp:      2026-02-21T01:14:37Z
+| Field | Value |
+|-------|-------|
+| Name | CodeOps-Courier |
+| Type | Spring Boot REST API |
+| Port | 8099 |
+| API Prefix | `/api/v1/courier` |
+| Java Version | 21 (target) / 25 (runtime) |
+| Spring Boot | 3.3.0 |
+| Build Tool | Maven (with wrapper) |
+| Database | PostgreSQL 16 (port 5438, database `codeops_courier`) |
+| ORM | Hibernate (JPA) with `ddl-auto: update` (dev) / `validate` (prod) |
+| Auth | JWT (HMAC-SHA, stateless, shared secret with CodeOps-Server) |
+
+---
+
+## 2. Source Statistics
+
+| Metric | Count |
+|--------|-------|
+| Java files (main) | 176 |
+| Java files (test) | 46 |
+| Lines of code (main) | 14,899 |
+| Lines of code (test) | 14,075 |
+| Entities | 17 + 1 abstract base |
+| Enums | 7 |
+| Repositories | 18 |
+| Services | 22 |
+| Controllers | 13 |
+| Mappers | 13 |
+| Request DTOs | 31 |
+| Response DTOs | 29 |
+| Config classes | 12 |
+| Exception classes | 6 |
+| Test files | 46 |
+| Test methods (@Test) | 680 |
+
+---
+
+## 3. Entry Point
+
+**File:** `src/main/java/com/codeops/courier/CourierApplication.java`
+
+```java
+@SpringBootApplication
+@EnableScheduling
+@EnableConfigurationProperties({JwtProperties.class, ServiceUrlProperties.class})
+public class CourierApplication { ... }
 ```
 
 ---
 
-## 2. Directory Structure
-
-```
-./CONVENTIONS.md
-./docker-compose.yml
-./Dockerfile
-./pom.xml
-./README.md
-./src/main/java/com/codeops/courier/CourierApplication.java
-./src/main/java/com/codeops/courier/config/AppConstants.java
-./src/main/java/com/codeops/courier/config/AsyncConfig.java
-./src/main/java/com/codeops/courier/config/CorsConfig.java
-./src/main/java/com/codeops/courier/config/DataSeeder.java
-./src/main/java/com/codeops/courier/config/JwtProperties.java
-./src/main/java/com/codeops/courier/config/LoggingInterceptor.java
-./src/main/java/com/codeops/courier/config/OpenApiConfig.java
-./src/main/java/com/codeops/courier/config/RequestCorrelationFilter.java
-./src/main/java/com/codeops/courier/config/RestTemplateConfig.java
-./src/main/java/com/codeops/courier/config/ServiceUrlProperties.java
-./src/main/java/com/codeops/courier/config/WebMvcConfig.java
-./src/main/java/com/codeops/courier/controller/HealthController.java
-./src/main/java/com/codeops/courier/dto/response/PageResponse.java
-./src/main/java/com/codeops/courier/entity/BaseEntity.java
-./src/main/java/com/codeops/courier/exception/AuthorizationException.java
-./src/main/java/com/codeops/courier/exception/CourierException.java
-./src/main/java/com/codeops/courier/exception/ErrorResponse.java
-./src/main/java/com/codeops/courier/exception/GlobalExceptionHandler.java
-./src/main/java/com/codeops/courier/exception/NotFoundException.java
-./src/main/java/com/codeops/courier/exception/ValidationException.java
-./src/main/java/com/codeops/courier/security/JwtAuthFilter.java
-./src/main/java/com/codeops/courier/security/JwtTokenValidator.java
-./src/main/java/com/codeops/courier/security/RateLimitFilter.java
-./src/main/java/com/codeops/courier/security/SecurityConfig.java
-./src/main/java/com/codeops/courier/security/SecurityUtils.java
-./src/main/resources/application.yml
-./src/main/resources/application-dev.yml
-./src/main/resources/application-integration.yml
-./src/main/resources/application-prod.yml
-./src/main/resources/application-test.yml
-./src/main/resources/logback-spring.xml
-./src/test/java/com/codeops/courier/config/AppConstantsTest.java
-./src/test/java/com/codeops/courier/config/LoggingInterceptorTest.java
-./src/test/java/com/codeops/courier/config/RequestCorrelationFilterTest.java
-./src/test/java/com/codeops/courier/controller/HealthControllerTest.java
-./src/test/java/com/codeops/courier/dto/PageResponseTest.java
-./src/test/java/com/codeops/courier/entity/BaseEntityTest.java
-./src/test/java/com/codeops/courier/exception/CourierExceptionTest.java
-./src/test/java/com/codeops/courier/exception/GlobalExceptionHandlerTest.java
-./src/test/java/com/codeops/courier/security/JwtAuthFilterTest.java
-./src/test/java/com/codeops/courier/security/JwtTokenValidatorTest.java
-./src/test/java/com/codeops/courier/security/RateLimitFilterTest.java
-./src/test/java/com/codeops/courier/security/SecurityConfigTest.java
-./src/test/java/com/codeops/courier/security/SecurityUtilsTest.java
-./src/test/resources/application-test.yml
-```
-
-Single-module Maven project. Source code at `src/main/java/com/codeops/courier/`. Packages: `config`, `controller`, `dto/response`, `entity`, `exception`, `security`. This is a skeleton — no domain entities, repositories, or services exist yet beyond infrastructure.
-
----
-
-## 3. Build & Dependency Manifest
-
-**Build file:** `pom.xml`
+## 4. Dependency Manifest
 
 | Dependency | Version | Purpose |
-|---|---|---|
-| spring-boot-starter-web | 3.3.0 (parent) | REST API framework |
-| spring-boot-starter-data-jpa | 3.3.0 (parent) | JPA/Hibernate ORM |
-| spring-boot-starter-security | 3.3.0 (parent) | Security framework |
-| spring-boot-starter-validation | 3.3.0 (parent) | Bean validation (Jakarta) |
-| postgresql | runtime (parent) | PostgreSQL JDBC driver |
-| jjwt-api / jjwt-impl / jjwt-jackson | 0.12.6 | JWT token parsing/validation |
-| lombok | 1.18.42 | Annotation-based boilerplate reduction |
-| mapstruct | 1.5.5.Final | DTO ↔ entity mapping |
-| jackson-datatype-jsr310 | parent | Java 8+ date/time serialization |
-| springdoc-openapi-starter-webmvc-ui | 2.5.0 | Swagger UI + OpenAPI spec generation |
+|------------|---------|---------|
+| spring-boot-starter-web | 3.3.0 | REST API framework |
+| spring-boot-starter-data-jpa | 3.3.0 | JPA/Hibernate ORM |
+| spring-boot-starter-security | 3.3.0 | Security framework |
+| spring-boot-starter-validation | 3.3.0 | Bean validation (Jakarta) |
+| postgresql | runtime | PostgreSQL JDBC driver |
+| jjwt-api / jjwt-impl / jjwt-jackson | 0.12.6 | JWT token handling |
+| lombok | 1.18.42 | Code generation (getters, builders) |
+| mapstruct / mapstruct-processor | 1.5.5 | DTO-entity mapping |
+| jackson-datatype-jsr310 | (managed) | Java 8+ date/time serialization |
+| jackson-dataformat-yaml | (managed) | YAML parsing (OpenAPI import/export) |
+| springdoc-openapi-starter-webmvc-ui | 2.5.0 | Swagger UI / OpenAPI docs |
 | logstash-logback-encoder | 7.4 | JSON structured logging (prod) |
-| spring-boot-starter-test | 3.3.0 (parent) | Test framework |
-| spring-security-test | parent | Security test support |
-| testcontainers postgresql | 1.19.8 | PostgreSQL in integration tests |
-| testcontainers junit-jupiter | 1.19.8 | Testcontainers JUnit 5 integration |
-| h2 | parent (test) | In-memory database for unit tests |
-| mockito | 5.21.0 (override) | Java 25 compatibility |
-| byte-buddy | 1.18.4 (override) | Java 25 compatibility |
-
-**Build plugins:** maven-compiler-plugin (source/target 21, Lombok + MapStruct annotation processors), maven-surefire-plugin (--add-opens for Java 25), jacoco-maven-plugin (0.8.14, prepare-agent + report), spring-boot-maven-plugin.
-
-```
-Build:   mvn clean package -DskipTests
-Test:    mvn test
-Run:     mvn spring-boot:run
-Package: mvn clean package
-```
+| graalvm-js / graalvm-js-scriptengine | 24.1.1 | JavaScript sandbox for scripts |
+| polyglot | 24.1.1 | GraalVM polyglot engine |
+| testcontainers-postgresql | 1.19.8 | Integration test containers |
+| h2 | test | In-memory database for unit tests |
+| mockito-core | 5.21.0 | Mocking framework |
+| byte-buddy | 1.18.4 | Mockito bytecode generation (Java 25 compat) |
+| jacoco-maven-plugin | 0.8.14 | Code coverage |
 
 ---
 
-## 4. Configuration & Infrastructure Summary
+## 5. Infrastructure
 
-- **`application.yml`** — `src/main/resources/application.yml`. Default profile: `dev`. Server port: 8099. `jpa.open-in-view: false`.
-- **`application-dev.yml`** — `src/main/resources/application-dev.yml`. PostgreSQL at `localhost:5438/codeops_courier`, credentials `${DB_USERNAME:codeops}/${DB_PASSWORD:codeops}`. `ddl-auto: update`, Flyway disabled, `show-sql: true`. JWT secret has dev default. CORS origins: `localhost:3000,3200,5173`. Service URLs: 8095–8098. Logging: DEBUG for app/hibernate/security/web.
-- **`application-prod.yml`** — `src/main/resources/application-prod.yml`. All config from env vars (no defaults). `ddl-auto: validate`, Flyway enabled. Logging: INFO/WARN.
-- **`application-test.yml`** — `src/main/resources/application-test.yml`. H2 in-memory with PostgreSQL mode. `ddl-auto: create-drop`, Flyway disabled. Fixed test JWT secret. Logging: WARN.
-- **`application-integration.yml`** — `src/main/resources/application-integration.yml`. PostgreSQL driver, `ddl-auto: create-drop`, Flyway disabled. Fixed integration JWT secret. Logging: WARN.
-- **`logback-spring.xml`** — `src/main/resources/logback-spring.xml`. Profiles: `dev` (ANSI console with MDC), `prod` (JSON via LogstashEncoder), `test` (WARN-only console), `default` (fallback console).
-- **`docker-compose.yml`** — PostgreSQL 16 Alpine on `127.0.0.1:5438`, container `codeops-courier-db`, DB `codeops_courier`, user/pass `codeops/codeops`. Volume: `codeops-courier-data`.
-- **`Dockerfile`** — `eclipse-temurin:21-jre-alpine`, non-root `appuser`, EXPOSE 8099.
-- **`.env`** — Does not exist. No `.env.example`. `.gitignore` exists.
+### 5.1 Docker Compose
 
-**Connection map:**
-```
-Database: PostgreSQL, localhost, 5438, codeops_courier
-Cache: None
-Message Broker: None
-External APIs: None (RestTemplate configured but unused)
-Cloud Services: None
-```
+**File:** `docker-compose.yml`
 
-**CI/CD:** None detected.
+| Service | Image | Port | Purpose |
+|---------|-------|------|---------|
+| courier-db | postgres:16-alpine | 127.0.0.1:5438:5432 | PostgreSQL (database: `codeops_courier`, user: `codeops`) |
 
----
+### 5.2 Dockerfile
 
-## 5. Startup & Runtime Behavior
+**File:** `Dockerfile`
 
-- **Entry point:** `com.codeops.courier.CourierApplication` — `@SpringBootApplication @EnableScheduling @EnableConfigurationProperties({JwtProperties, ServiceUrlProperties})`
-- **@PostConstruct:** `JwtTokenValidator.validateSecret()` — validates JWT secret is >= 32 characters. Fails fast if misconfigured.
-- **CommandLineRunner:** `DataSeeder` (dev profile only) — currently a no-op logging "No seed data configured yet."
-- **Scheduled tasks:** `@EnableScheduling` present but no `@Scheduled` methods exist yet.
-- **Health check:** `GET /api/v1/courier/health` → `{"status":"UP","service":"codeops-courier","timestamp":"..."}` (200 OK, no auth required)
-- **Startup time:** ~1.2 seconds
+- Base: `eclipse-temurin:21-jre-alpine`
+- Non-root user: `appuser`
+- Exposed port: 8099
+- Entry: `java -jar app.jar`
 
----
+### 5.3 Application Profiles
 
-## 6. Entity / Data Model Layer
+| Profile | Database | DDL | Purpose |
+|---------|----------|-----|---------|
+| dev (default) | PostgreSQL localhost:5438 | update | Local development |
+| prod | env var `DATABASE_URL` | validate | Production (Flyway enabled) |
+| test | H2 in-memory (PostgreSQL mode) | create-drop | Unit tests |
+| integration | PostgreSQL (Testcontainers) | create-drop | Integration tests |
 
-### BaseEntity.java (MappedSuperclass — not a table)
+### 5.4 Logging
 
-```
-=== BaseEntity.java ===
-Table: N/A (@MappedSuperclass)
-Primary Key: id: UUID (GenerationType.UUID, nullable=false, updatable=false)
+**File:** `src/main/resources/logback-spring.xml`
 
-Fields:
-  - id: UUID [@Id @GeneratedValue(strategy=UUID) @Column(nullable=false, updatable=false)]
-  - createdAt: Instant [@Column(name="created_at", nullable=false, updatable=false)]
-  - updatedAt: Instant [@Column(name="updated_at", nullable=false)]
+| Profile | Format | Level |
+|---------|--------|-------|
+| dev | Human-readable console | DEBUG |
+| prod | JSON (LogstashEncoder) | INFO |
+| test | Console | WARN |
 
-Relationships: None
-Indexes: None
-Validation: None
-Auditing: @PrePersist sets createdAt+updatedAt (single Instant.now()), @PreUpdate sets updatedAt
-```
+### 5.5 External Service URLs
 
-**No concrete entities exist yet.** This is a skeleton project. All future entities will extend BaseEntity.
-
-**Entity Relationship Summary:** None — no concrete entities.
+| Property | Default (dev) | Purpose |
+|----------|---------------|---------|
+| `codeops.services.server-url` | `http://localhost:8095` | CodeOps-Server |
+| `codeops.services.registry-url` | `http://localhost:8096` | Registry service |
+| `codeops.services.vault-url` | `http://localhost:8097` | Vault service |
+| `codeops.services.logger-url` | `http://localhost:8098` | Logger service |
 
 ---
 
-## 7. Enum Definitions
+## 6. Security Architecture
 
-No enums defined.
+### 6.1 Filter Chain Order
+
+1. **RequestCorrelationFilter** (`@Order(HIGHEST_PRECEDENCE)`) — X-Correlation-ID generation/reuse, MDC setup
+2. **RateLimitFilter** — 100 req/60s per IP sliding window, 429 response
+3. **JwtAuthFilter** — Bearer token extraction, HMAC-SHA validation, SecurityContext setup
+
+### 6.2 Public Endpoints
+
+- `GET /api/v1/courier/health`
+- `GET /swagger-ui.html`, `/swagger-ui/**`
+- `GET /v3/api-docs/**`, `/v3/api-docs.yaml`
+
+### 6.3 Security Headers
+
+- CSP: `default-src 'self'; frame-ancestors 'none'`
+- HSTS: max-age 31536000s, include subdomains
+- Frame Options: DENY
+- Session: STATELESS
+
+### 6.4 CORS Configuration
+
+- Origins: configurable via `codeops.cors.allowed-origins` (default: `http://localhost:3000`)
+- Methods: GET, POST, PUT, DELETE, PATCH, OPTIONS
+- Headers: Authorization, Content-Type, X-Team-ID, X-Correlation-ID
+- Credentials: enabled
+- Preflight cache: 3600s
+
+### 6.5 JWT Claims
+
+| Claim | Type | Usage |
+|-------|------|-------|
+| sub | UUID | User ID (principal) |
+| email | String | User email (credentials) |
+| roles | List\<String\> | Mapped to `ROLE_*` authorities |
+| teamIds | List\<UUID\> | Available team memberships |
+| teamRoles | Map\<UUID, String\> | Per-team role assignments |
+
+---
+
+## 7. Entity Layer
+
+### 7.1 Base Entity
+
+**File:** `entity/BaseEntity.java` — `@MappedSuperclass`
+
+All entities extend BaseEntity providing:
+- `id` (UUID, `@GeneratedValue(strategy = GenerationType.UUID)`)
+- `createdAt` (Instant, `@PrePersist`)
+- `updatedAt` (Instant, `@PrePersist` + `@PreUpdate`)
+
+### 7.2 Entities
+
+| Entity | Table | Key Relationships | Unique Constraints |
+|--------|-------|-------------------|--------------------|
+| Collection | `collections` | → Folder (1:N), → EnvironmentVariable (1:N) | {team_id, name} |
+| Folder | `folders` | → Collection (N:1), → Folder self-ref (N:1), → Request (1:N) | — |
+| Request | `requests` | → Folder (N:1), → Headers/Params/Body/Auth/Scripts (1:N/1:1) | — |
+| RequestHeader | `request_headers` | → Request (N:1) | — |
+| RequestParam | `request_params` | → Request (N:1) | — |
+| RequestBody | `request_bodies` | → Request (1:1) | — |
+| RequestAuth | `request_auths` | → Request (1:1) | — |
+| RequestScript | `request_scripts` | → Request (N:1) | {request_id, script_type} |
+| Environment | `environments` | → EnvironmentVariable (1:N) | {team_id, name} |
+| EnvironmentVariable | `environment_variables` | → Environment (N:1), → Collection (N:1) | — |
+| GlobalVariable | `global_variables` | — | {team_id, variable_key} |
+| CollectionShare | `collection_shares` | → Collection (N:1) | {collection_id, shared_with_user_id} |
+| Fork | `forks` | → Collection source (N:1), → Collection forked (1:1) | — |
+| MergeRequest | `merge_requests` | → Fork (N:1), → Collection target (N:1) | — |
+| RunResult | `run_results` | → RunIteration (1:N) | — |
+| RunIteration | `run_iterations` | → RunResult (N:1) | — |
+| RequestHistory | `request_history` | — (denormalized) | — |
+| CodeSnippetTemplate | `code_snippet_templates` | — | {language} |
+
+### 7.3 Enums
+
+| Enum | Values |
+|------|--------|
+| AuthType | NO_AUTH, API_KEY, BEARER_TOKEN, BASIC_AUTH, OAUTH2_AUTHORIZATION_CODE, OAUTH2_CLIENT_CREDENTIALS, OAUTH2_IMPLICIT, OAUTH2_PASSWORD, JWT_BEARER, INHERIT_FROM_PARENT |
+| BodyType | NONE, FORM_DATA, X_WWW_FORM_URLENCODED, RAW_JSON, RAW_XML, RAW_HTML, RAW_TEXT, RAW_YAML, BINARY, GRAPHQL |
+| CodeLanguage | CURL, PYTHON_REQUESTS, JAVASCRIPT_FETCH, JAVASCRIPT_AXIOS, JAVA_HTTP_CLIENT, JAVA_OKHTTP, CSHARP_HTTP_CLIENT, GO, RUBY, PHP, SWIFT, KOTLIN |
+| HttpMethod | GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS |
+| RunStatus | PENDING, RUNNING, COMPLETED, FAILED, CANCELLED |
+| ScriptType | PRE_REQUEST, POST_RESPONSE |
+| SharePermission | VIEWER, EDITOR, ADMIN |
 
 ---
 
 ## 8. Repository Layer
 
-No repositories defined.
+18 repositories extending `JpaRepository<Entity, UUID>`. All 99 custom methods are derived queries (no `@Query` annotations). 5 paginated methods. 10 delete methods. 13 exists/count methods.
+
+| Repository | Entity | Custom Methods | Notable |
+|------------|--------|----------------|---------|
+| CollectionRepository | Collection | 8 | Paginated, search by name |
+| FolderRepository | Folder | 5 | Null parent check for root folders |
+| RequestRepository | Request | 2 | Ordered by sortOrder |
+| RequestHeaderRepository | RequestHeader | 2 | — |
+| RequestParamRepository | RequestParam | 2 | — |
+| RequestBodyRepository | RequestBody | 2 | — |
+| RequestAuthRepository | RequestAuth | 2 | — |
+| RequestScriptRepository | RequestScript | 3 | By scriptType |
+| EnvironmentRepository | Environment | 5 | Active environment lookup |
+| EnvironmentVariableRepository | EnvironmentVariable | 5 | Enabled-only filter |
+| GlobalVariableRepository | GlobalVariable | 4 | Upsert by key |
+| CollectionShareRepository | CollectionShare | 5 | Delete by composite |
+| ForkRepository | Fork | 4 | Exists check for duplicate forks |
+| MergeRequestRepository | MergeRequest | 4 | Filter by status |
+| RunResultRepository | RunResult | 4 | Paginated, by status |
+| RunIterationRepository | RunIteration | 1 | Ordered by iteration number |
+| RequestHistoryRepository | RequestHistory | 8 | Temporal queries, 3 paginated |
+| CodeSnippetTemplateRepository | CodeSnippetTemplate | 3 | By language |
 
 ---
 
 ## 9. Service Layer
 
-No service classes defined. Domain services will be added in future tasks.
+22 services with ~180 public methods. All annotated with `@Service`, `@Slf4j`, `@RequiredArgsConstructor`.
+
+### 9.1 Core CRUD Services
+
+| Service | Methods | Key Responsibilities |
+|---------|---------|---------------------|
+| CollectionService | 8 | CRUD + duplicate + search; team validation |
+| FolderService | 9 | CRUD + tree + reorder + move; circular reference detection |
+| RequestService | 14 | CRUD + components (headers/params/body/auth/scripts) + reorder + move + duplicate |
+| EnvironmentService | 9 | CRUD + activate/deactivate + clone + variable management; secret masking |
+| VariableService | 11 | Global variables CRUD + variable resolution across scopes (Global < Collection < Environment < Local) |
+
+### 9.2 Feature Services
+
+| Service | Methods | Key Responsibilities |
+|---------|---------|---------------------|
+| RequestProxyService | 3 | HTTP proxy execution; redirect handling (max 5 hops); auth resolution; history recording |
+| GraphQLService | 4 | Query execution + introspection + validation + formatting |
+| CollectionRunnerService | ~7 | Collection run orchestration; iteration tracking; assertion evaluation |
+| CodeGenerationService | ~3 | Code snippet generation for 12 languages from templates |
+| HistoryService | 9 | Request history CRUD + search + cleanup + pagination |
+| ShareService | 9 | Collection sharing with permission hierarchy (VIEWER < EDITOR < ADMIN) |
+| ForkService | 4 | Collection forking; duplicate prevention |
+| MergeService | 4 | Merge request lifecycle; conflict detection |
+| ImportService | 1 | Format routing + auto-detection (Postman/OpenAPI/cURL) |
+| ExportService | 3 | Export as Postman v2.1, OpenAPI 3.0.3, or native JSON |
+| ScriptEngineService | 2 | GraalVM JavaScript sandbox for pre-request/post-response scripts; pm.* API |
+
+### 9.3 Support Services
+
+| Service | Purpose |
+|---------|---------|
+| AuthResolverService | Resolves authentication config from request → folder → collection inheritance chain |
+| PostmanImporter | Parses Postman v2.1 JSON collections |
+| OpenApiImporter | Parses OpenAPI 3.x JSON/YAML specs |
+| CurlImporter | Parses cURL commands |
+| DataFileParser | Parses CSV/JSON data files for collection runner iterations |
+| ScriptContext | POJO holding script execution state (variables, request/response data, assertions) |
 
 ---
 
-## 10. Security Architecture
+## 10. Controller Layer
 
-### Authentication Flow
-- **Method:** JWT validation-only (never issues tokens). Tokens issued by CodeOps-Server.
-- **Algorithm:** HMAC-SHA256 via jjwt 0.12.6
-- **Token claims extracted:** `sub` (userId UUID), `email`, `roles` (List<String>), `teamIds` (List<UUID>), `teamRoles` (Map<UUID,String>)
-- **Filter chain flow:** Request → RequestCorrelationFilter → RateLimitFilter → JwtAuthFilter → SecurityConfig authorization
-- **On valid token:** `SecurityContextHolder` populated with `UsernamePasswordAuthenticationToken(userId:UUID, email:String, ROLE_* authorities)`
-- **On invalid/missing token:** Request proceeds unauthenticated; authorization rules reject if endpoint requires auth
-- **Token revocation:** Not implemented (no blacklist)
+13 controllers. All authenticated endpoints require `@PreAuthorize("hasRole('ADMIN')")` and `@RequestHeader("X-Team-ID")`.
 
-### Authorization Model
-- **Roles:** Extracted from JWT `roles` claim. Mapped to Spring authorities with `ROLE_` prefix.
-- **Admin check:** `SecurityUtils.isAdmin()` — returns true for `ROLE_ADMIN` or `ROLE_OWNER`
-- **Method security:** `@EnableMethodSecurity` active. Convention: `@PreAuthorize("hasRole('ADMIN')")` (never just `hasAuthority`).
-- **No mutation endpoints exist yet**, so no `@PreAuthorize` annotations are in use.
+### 10.1 Endpoint Summary
 
-### Security Filter Chain (order as registered)
-1. `DisableEncodeUrlFilter` (Spring default)
-2. `WebAsyncManagerIntegrationFilter` (Spring default)
-3. `SecurityContextHolderFilter` (Spring default)
-4. `HeaderWriterFilter` (CSP, HSTS, X-Frame-Options, X-Content-Type-Options)
-5. `CorsFilter`
-6. `LogoutFilter`
-7. **`JwtAuthFilter`** — Extracts Bearer token, validates, sets SecurityContext
-8. **`RateLimitFilter`** — Per-IP rate limiting on `/api/v1/courier/**`
-9. **`RequestCorrelationFilter`** — MDC correlation ID
-10. `RequestCacheAwareFilter`
-11. `SecurityContextHolderAwareRequestFilter`
-12. `AnonymousAuthenticationFilter`
-13. `SessionManagementFilter`
-14. `ExceptionTranslationFilter`
-15. `AuthorizationFilter`
-
-### Public Paths (permitAll)
-- `/api/v1/courier/health`
-- `/swagger-ui.html`, `/swagger-ui/**`
-- `/v3/api-docs/**`, `/v3/api-docs.yaml`
-
-### Protected Paths
-- `/api/**` → authenticated
-- All other paths → authenticated
-
-### CORS Configuration
-- **Origins:** From `codeops.cors.allowed-origins` (dev: `localhost:3000,3200,5173`)
-- **Methods:** GET, POST, PUT, DELETE, PATCH, OPTIONS
-- **Allowed Headers:** Authorization, Content-Type, X-Team-ID, X-Correlation-ID
-- **Exposed Headers:** Authorization
-- **Credentials:** true
-- **Max Age:** 3600s
-
-### Encryption
-- JWT signing: HMAC-SHA256 with shared secret from `codeops.jwt.secret`
-- No at-rest encryption
-
-### Password Policy
-- N/A — Courier validates JWT tokens only, no user registration
-
-### Rate Limiting
-- **Scope:** Per-IP on `/api/v1/courier/**`
-- **Strategy:** In-memory ConcurrentHashMap sliding window
-- **Limit:** 100 requests per 60-second window
-- **IP resolution:** X-Forwarded-For header (first entry), fallback to `remoteAddr`
-- **On violation:** 429 JSON response `{"status":429,"message":"Rate limit exceeded. Try again later."}`
+| Controller | Base Path | Endpoints | Auth |
+|------------|-----------|-----------|------|
+| HealthController | `/health` | 1 GET | Public |
+| CollectionController | `/collections` | 12 (5 GET, 1 POST, 1 PUT, 1 DELETE, 3 nested) | ADMIN |
+| FolderController | `/folders` | 8 (3 GET, 1 POST, 2 PUT, 1 DELETE, 1 reorder) | ADMIN |
+| RequestController | `/requests` | 13 (2 GET, 2 POST, 7 PUT, 1 DELETE, 1 send) | ADMIN |
+| EnvironmentController | `/environments` | 10 (4 GET, 1 POST, 3 PUT, 1 DELETE, 1 clone) | ADMIN |
+| VariableController | `/variables/global` | 4 (1 GET, 2 POST, 1 DELETE) | ADMIN |
+| ProxyController | `/proxy` | 2 (2 POST) | ADMIN |
+| HistoryController | `/history` | 7 (5 GET, 2 DELETE) | ADMIN |
+| ShareController | (nested under collections) | 5 (2 GET, 1 POST, 1 PUT, 1 DELETE) | ADMIN |
+| ImportController | `/import` | 3 (3 POST) | ADMIN |
+| GraphQLController | `/graphql` | 4 (4 POST) | ADMIN |
+| RunnerController | `/runner` | 7 (4 GET, 2 POST, 1 DELETE) | ADMIN |
+| CodeGenerationController | `/codegen` | 3 (1 GET, 2 POST) | ADMIN |
+| **Total** | | **79** | |
 
 ---
 
-## 11. Notification / Messaging Layer
+## 11. DTO Layer
 
-No notification, email, or webhook services exist.
+### 11.1 Request DTOs (31)
 
----
+All request DTOs are Java records with Jakarta validation annotations (`@NotBlank`, `@NotNull`, `@NotEmpty`, `@Min`, `@Max`, `@Size`).
 
-## 12. Error Handling
+Key request DTOs:
+- `CreateCollectionRequest(name, description, authType, authConfig)`
+- `CreateFolderRequest(collectionId, parentFolderId, name, description, sortOrder)`
+- `CreateRequestRequest(folderId, name, description, method, url, sortOrder)`
+- `SendRequestProxyRequest(method, url, headers, body, bodyType, authConfig, environmentId, saveToHistory, timeoutMs, followRedirects)`
+- `ExecuteGraphQLRequest(url, query, variables, operationName, headers, authConfig, environmentId)`
+- `StartCollectionRunRequest(collectionId, environmentId, iterationCount, delayBetweenRequestsMs, dataFile, dataFileContent)`
+- `ImportCollectionRequest(format, content)`
+- `GenerateCodeRequest(requestId, language, environmentId)`
 
-**GlobalExceptionHandler** (`@RestControllerAdvice`):
+### 11.2 Response DTOs (29)
 
-| Exception Type | HTTP Status | Response Body | Client-visible? |
-|---|---|---|---|
-| `NotFoundException` | 404 | `ErrorResponse(404, ex.message)` | Yes (custom message) |
-| `ValidationException` | 400 | `ErrorResponse(400, ex.message)` | Yes (custom message) |
-| `AuthorizationException` | 403 | `ErrorResponse(403, ex.message)` | Yes (custom message) |
-| `EntityNotFoundException` | 404 | `ErrorResponse(404, "Resource not found")` | Generic |
-| `IllegalArgumentException` | 400 | `ErrorResponse(400, "Invalid request")` | Generic |
-| `AccessDeniedException` | 403 | `ErrorResponse(403, "Access denied")` | Generic |
-| `MethodArgumentNotValidException` | 400 | `ErrorResponse(400, field errors joined)` | Field-level |
-| `HttpMessageNotReadableException` | 400 | `ErrorResponse(400, "Malformed request body")` | Generic |
-| `NoResourceFoundException` | 404 | `ErrorResponse(404, "Resource not found")` | Generic |
-| `MissingServletRequestParameterException` | 400 | `ErrorResponse(400, "Missing required parameter: ...")` | Param name |
-| `MethodArgumentTypeMismatchException` | 400 | `ErrorResponse(400, "Invalid value for parameter ...")` | Param name+value |
-| `MissingRequestHeaderException` | 400 | `ErrorResponse(400, "Missing required header: ...")` | Header name |
-| `HttpRequestMethodNotSupportedException` | 405 | `ErrorResponse(405, "HTTP method ... not supported")` | Method name |
-| `CourierException` (base) | 500 | `ErrorResponse(500, "An internal error occurred")` | Generic |
-| `Exception` (catch-all) | 500 | `ErrorResponse(500, "An internal error occurred")` | Generic |
+All response DTOs are Java records. Key DTOs:
+- `ProxyResponse(statusCode, statusText, headers, responseBody, responseTimeMs, responseSizeBytes, contentType, redirectChain, historyId)`
+- `GraphQLResponse(httpResponse, schema)`
+- `RunResultResponse(id, teamId, collectionId, environmentId, status, totalRequests, passedRequests, failedRequests, totalAssertions, passedAssertions, failedAssertions, totalDurationMs, iterationCount, delayBetweenRequestsMs, dataFilename, startedAt, completedAt, startedByUserId, createdAt)`
+- `PageResponse<T>(content, page, size, totalElements, totalPages, last)`
 
-**ErrorResponse format:** `record ErrorResponse(int status, String message)` — no timestamp, no path.
+### 11.3 Mapper Layer (13)
 
-Internal exception messages and stack traces are logged server-side (WARN for 4xx, ERROR for 5xx) but never exposed to clients for 500-level errors.
-
----
-
-## 13. Test Coverage
-
-- **Unit test files:** 13
-- **Integration test files:** 0
-- **Total @Test methods:** 53 (all unit)
-- **JaCoCo coverage:** 79.6%
-- **Framework:** JUnit 5 + Mockito 5.21.0 + Spring Boot Test
-- **Test DB:** H2 in-memory with PostgreSQL mode (`application-test.yml`)
-- **Test config:** `src/test/resources/application-test.yml`
-- **Integration tests:** None yet (Testcontainers dependency available but unused)
+MapStruct mappers with `@Mapping(target = "isXxx", source = "xxx")` for boolean fields affected by Lombok's JavaBeans naming:
+- `isShared` ← `shared` (CollectionMapper)
+- `isActive` ← `active` (EnvironmentMapper)
+- `isSecret` ← `secret` (EnvironmentVariableMapper, GlobalVariableMapper)
+- `isEnabled` ← `enabled` (EnvironmentVariableMapper, GlobalVariableMapper, RequestHeaderMapper, RequestParamMapper)
 
 ---
 
-## 14. Cross-Cutting Patterns & Conventions
+## 12. Exception Handling
 
-- **Package structure:** `com.codeops.courier.{config,controller,dto.response,entity,exception,security}`
-- **Base classes:** `BaseEntity` (UUID PK, createdAt, updatedAt)
-- **Exception hierarchy:** `CourierException` → `NotFoundException`, `ValidationException`, `AuthorizationException`
-- **Error response:** `record ErrorResponse(int status, String message)` — consistent across all handlers
-- **Pagination:** `PageResponse<T>` record with `from(Page<T>)` factory method. Fields: content, page, size, totalElements, totalPages, isLast.
-- **Constants:** `AppConstants` — API_PREFIX, DEFAULT_PAGE_SIZE (20), MAX_PAGE_SIZE (100), RATE_LIMIT_REQUESTS (100), RATE_LIMIT_WINDOW_SECONDS (60), SERVICE_NAME
-- **Naming:** Controller methods are action verbs (`health()`). API prefix: `/api/v1/courier/`.
-- **Security pattern:** `@PreAuthorize("hasRole('ADMIN')")` (per CONVENTIONS.md — never just `hasAuthority`)
-- **Validation:** Jakarta Bean Validation on DTOs (when they exist). Service-level business rules throw `ValidationException`.
-- **Logging:** SLF4J + Logback. `@Slf4j` Lombok annotation on some classes, explicit `LoggerFactory` on others. MDC keys: `correlationId`, `userId`, `teamId`, `requestPath`, `requestMethod`.
-- **Documentation comments:** Javadoc on all classes and all public methods (excluding DTOs, entities, generated code per conventions). All 26 source files documented.
+### 12.1 Exception Hierarchy
 
----
+```
+RuntimeException
+└── CourierException (base, 500)
+    ├── NotFoundException (404)
+    ├── ValidationException (400)
+    └── AuthorizationException (403)
+```
 
-## 15. Known Issues, TODOs, and Technical Debt
+### 12.2 GlobalExceptionHandler (14 handlers)
 
-No TODO, FIXME, HACK, or XXX comments found in source code.
-
----
-
-## 16. OpenAPI Specification
-
-Fetched from running application at `http://localhost:8099/v3/api-docs.yaml` and saved as `CodeOps-Courier-OpenAPI.yaml` (38 lines). Contains 1 endpoint: `GET /api/v1/courier/health`.
-
----
-
-## 17. DATABASE SCHEMA — Live Audit
-
-Database started and queried. **0 tables in public schema.** This is expected — `BaseEntity` is `@MappedSuperclass` (not a concrete table), and no domain entities exist yet. Hibernate `ddl-auto: update` will create tables when entities are added.
-
-JPA model and database schema are in sync (both empty).
+| Exception | HTTP Status | Response Message |
+|-----------|-------------|------------------|
+| NotFoundException | 404 | Exception message |
+| ValidationException | 400 | Exception message |
+| AuthorizationException | 403 | Exception message |
+| EntityNotFoundException (JPA) | 404 | "Resource not found" |
+| IllegalArgumentException | 400 | "Invalid request" |
+| AccessDeniedException (Spring) | 403 | "Access denied" |
+| MethodArgumentNotValidException | 400 | Aggregated field errors |
+| HttpMessageNotReadableException | 400 | "Malformed request body" |
+| NoResourceFoundException | 404 | "Resource not found" |
+| MissingServletRequestParameterException | 400 | "Missing required parameter: '{name}'" |
+| MethodArgumentTypeMismatchException | 400 | "Invalid value for parameter '{name}'" |
+| MissingRequestHeaderException | 400 | "Missing required header: '{name}'" |
+| HttpRequestMethodNotSupportedException | 405 | "HTTP method '{method}' is not supported" |
+| Exception (catch-all) | 500 | "An internal error occurred" |
 
 ---
 
-## 18. MESSAGE BROKER DETECTION
+## 13. Configuration
 
-No message broker (Kafka, RabbitMQ, SQS/SNS) detected in this project.
-
----
-
-## 19. CACHE DETECTION
-
-No Redis or caching layer detected in this project.
-
----
-
-## 20. ENVIRONMENT VARIABLE INVENTORY
-
-| Variable | Required | Default | Used By | Purpose |
-|---|---|---|---|---|
-| `DB_USERNAME` | No | `codeops` | `application-dev.yml` | Database username |
-| `DB_PASSWORD` | No | `codeops` | `application-dev.yml` | Database password |
-| `JWT_SECRET` | Prod: Yes, Dev: No | Dev: 53-char default | `application-dev/prod.yml` | HMAC-SHA256 signing key |
-| `DATABASE_URL` | Prod: Yes | None | `application-prod.yml` | JDBC connection URL |
-| `DATABASE_USERNAME` | Prod: Yes | None | `application-prod.yml` | Database username |
-| `DATABASE_PASSWORD` | Prod: Yes | None | `application-prod.yml` | Database password |
-| `CORS_ALLOWED_ORIGINS` | Prod: Yes | None | `application-prod.yml` | Comma-separated origins |
-| `CODEOPS_SERVER_URL` | Prod: Yes | None | `application-prod.yml` | CodeOps-Server base URL |
-| `CODEOPS_REGISTRY_URL` | Prod: Yes | None | `application-prod.yml` | CodeOps-Registry base URL |
-| `CODEOPS_VAULT_URL` | Prod: Yes | None | `application-prod.yml` | CodeOps-Vault base URL |
-| `CODEOPS_LOGGER_URL` | Prod: Yes | None | `application-prod.yml` | CodeOps-Logger base URL |
-
-**Warning:** Dev JWT secret is hardcoded in `application-dev.yml` but only as a dev default (overridden by `JWT_SECRET` env var). Not dangerous — dev profile only.
+| Config Class | Purpose |
+|--------------|---------|
+| SecurityConfig | Filter chain, public paths, security headers, session policy |
+| CorsConfig | CORS policy (origins, methods, headers, credentials) |
+| HttpClientConfig | Java HttpClient for proxy (30s timeout, HTTP/1.1, no auto-redirect) |
+| RestTemplateConfig | RestTemplate for sibling services (5s connect, 10s read) |
+| AsyncConfig | Thread pool (5-10 threads, 100 queue, CallerRunsPolicy) |
+| OpenApiConfig | Swagger/OpenAPI metadata, JWT bearer auth scheme |
+| WebMvcConfig | Registers LoggingInterceptor for `/api/**` |
+| LoggingInterceptor | Pre/post request logging with status-based levels |
+| RequestCorrelationFilter | X-Correlation-ID management, MDC population |
+| DataSeeder | Dev profile seed data (collection, folders, requests, environment, variables) |
+| JwtProperties | `codeops.jwt.secret` binding |
+| ServiceUrlProperties | External service URLs binding |
+| AppConstants | All magic numbers centralized |
 
 ---
 
-## 21. SERVICE DEPENDENCY MAP
+## 14. Test Inventory
 
-Standalone service with no outbound service-to-service HTTP calls. `RestTemplate` bean is configured (5s connect, 10s read timeout) but not injected or used by any class. `ServiceUrlProperties` defines URLs for CodeOps-Server (8095), Registry (8096), Vault (8097), and Logger (8098) but no client code exists yet.
+### 14.1 Test Distribution
 
-**Inbound dependencies:** None known. This service will be called by CodeOps-Client (Flutter desktop app) once Courier features are integrated.
+| Layer | Files | Methods | Pattern |
+|-------|-------|---------|---------|
+| Controller tests | 13 | 167 | `@WebMvcTest` + `TestSecurityConfig` + `@MockBean` |
+| Service tests | 22 | 480 | `@ExtendWith(MockitoExtension)` + `@Mock` + `@InjectMocks` |
+| Security tests | 5 | 21 | Unit tests for filters, validators, utils |
+| Config tests | 3 | 6 | Unit tests for constants, interceptor, correlation filter |
+| Entity tests | 1 | 3 | BaseEntity lifecycle |
+| Exception tests | 2 | 19 | Exception hierarchy + handler |
+| DTO tests | 1 | 2 | PageResponse conversion |
+| **Total** | **46** | **680** | |
+
+### 14.2 Integration Tests
+
+**Count: 0** — `application-integration.yml` and Testcontainers dependency are configured but no `@SpringBootTest` integration tests exist.
+
+---
+
+## 15. Environment Variables
+
+| Variable | Profile | Purpose |
+|----------|---------|---------|
+| `DATABASE_URL` | prod | PostgreSQL connection string |
+| `DATABASE_USERNAME` | prod | Database username |
+| `DATABASE_PASSWORD` | prod | Database password |
+| `JWT_SECRET` | prod | JWT signing secret (min 32 chars) |
+| `CORS_ALLOWED_ORIGINS` | prod | Comma-separated allowed origins |
+| `CODEOPS_SERVER_URL` | prod | CodeOps-Server base URL |
+| `CODEOPS_REGISTRY_URL` | prod | Registry service base URL |
+| `CODEOPS_VAULT_URL` | prod | Vault service base URL |
+| `CODEOPS_LOGGER_URL` | prod | Logger service base URL |
+
+---
+
+## 16. Known Issues & Technical Debt
+
+1. **No integration tests** — Testcontainers dependency and profile exist but are unused
+2. **Script timeout mismatch** — `AppConstants.SCRIPT_TIMEOUT_SECONDS = 5` vs `ScriptEngineService` uses 10s
+3. **In-memory rate limiter** — `ConcurrentHashMap` state lost on restart; not shared across instances
+4. **No caching** — Frequently-read collections/environments hit the database on every request
+5. **No circuit breaker** — External service calls via RestTemplate have no resilience patterns
+6. **No soft-delete** — Hard deletes with no audit trail for deleted resources
+7. **No message broker** — No Kafka/RabbitMQ for async operations
+8. **MergeRequest.status is String** — Should be an enum for type safety (other status fields use enums)
+
+---
+
+## 17. Architecture Diagram
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     CodeOps-Courier                          │
+│                     Port 8099                                │
+├─────────────────────────────────────────────────────────────┤
+│  Filters: Correlation → RateLimit → JwtAuth                 │
+├─────────────────────────────────────────────────────────────┤
+│  Controllers (13)                                            │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐       │
+│  │Collection│ │ Folder   │ │ Request  │ │Environmt │       │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘       │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐       │
+│  │  Proxy   │ │ History  │ │ GraphQL  │ │  Runner  │       │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘       │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐       │
+│  │  Share   │ │ Import   │ │ CodeGen  │ │ Variable │       │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘       │
+│  ┌──────────┐                                                │
+│  │ Health   │ (public)                                       │
+│  └──────────┘                                                │
+├─────────────────────────────────────────────────────────────┤
+│  Services (22) + Mappers (13)                                │
+├─────────────────────────────────────────────────────────────┤
+│  Repositories (18) — Spring Data JPA (derived queries only)  │
+├─────────────────────────────────────────────────────────────┤
+│  Entities (17) — BaseEntity (UUID PK, audit timestamps)      │
+└───────────────────────┬─────────────────────────────────────┘
+                        │
+                   ┌────▼────┐
+                   │PostgreSQL│
+                   │Port 5438 │
+                   └──────────┘
+```
+
+---
+
+## 18. Scorecard Reference
+
+See `CodeOps-Courier-Scorecard.md` for the detailed quality scorecard.
+
+**Overall Score: 92/100**

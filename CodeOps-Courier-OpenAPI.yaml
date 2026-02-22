@@ -1,38 +1,3027 @@
-openapi: 3.0.1
+openapi: 3.0.3
 info:
   title: CodeOps-Courier API
-  description: "Full-featured API testing and development platform for the CodeOps\
-    \ ecosystem. Manages workspaces, collections, requests, environments, test suites,\
-    \ and execution history."
+  description: >-
+    Full-featured API testing and development platform. Manages collections,
+    folders, requests, environments, variables, test suites, history, code
+    generation, import/export, and request execution.
+  version: 1.0.0
   contact:
     name: CodeOps Team
-  version: 1.0.0
+
 servers:
-- url: http://localhost:8099
-  description: Local development
+  - url: http://localhost:8099/api/v1/courier
+    description: Local development
+
 security:
-- bearerAuth: []
-tags:
-- name: Health
-  description: Public health check endpoint
-paths:
-  /api/v1/courier/health:
-    get:
-      tags:
-      - Health
-      operationId: health
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                type: object
-                additionalProperties:
-                  type: object
+  - bearerAuth: []
+
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
+  parameters:
+    TeamIdHeader:
+      name: X-Team-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        default: 0
+    SizeParam:
+      name: size
+      in: query
+      schema:
+        type: integer
+        default: 20
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+
+    # ─── Collection ───
+    CreateCollectionRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 2000
+        authType:
+          $ref: '#/components/schemas/AuthType'
+        authConfig:
+          type: string
+
+    UpdateCollectionRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 2000
+        authType:
+          $ref: '#/components/schemas/AuthType'
+        authConfig:
+          type: string
+
+    CollectionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        teamId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        authType:
+          $ref: '#/components/schemas/AuthType'
+        authConfig:
+          type: string
+        isShared:
+          type: boolean
+        createdBy:
+          type: string
+          format: uuid
+        folderCount:
+          type: integer
+        requestCount:
+          type: integer
+        preRequestScript:
+          type: string
+        postResponseScript:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CollectionSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        isShared:
+          type: boolean
+        folderCount:
+          type: integer
+        requestCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    # ─── Folder ───
+    CreateFolderRequest:
+      type: object
+      required: [collectionId, name]
+      properties:
+        collectionId:
+          type: string
+          format: uuid
+        parentFolderId:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 2000
+        sortOrder:
+          type: integer
+
+    UpdateFolderRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 2000
+        parentFolderId:
+          type: string
+          format: uuid
+        sortOrder:
+          type: integer
+        preRequestScript:
+          type: string
+        postResponseScript:
+          type: string
+        authType:
+          $ref: '#/components/schemas/AuthType'
+        authConfig:
+          type: string
+
+    FolderResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        collectionId:
+          type: string
+          format: uuid
+        parentFolderId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        sortOrder:
+          type: integer
+        subFolderCount:
+          type: integer
+        requestCount:
+          type: integer
+        preRequestScript:
+          type: string
+        postResponseScript:
+          type: string
+        authType:
+          $ref: '#/components/schemas/AuthType'
+        authConfig:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    FolderTreeResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        sortOrder:
+          type: integer
+        subFolders:
+          type: array
+          items:
+            $ref: '#/components/schemas/FolderTreeResponse'
+        requests:
+          type: array
+          items:
+            $ref: '#/components/schemas/RequestSummaryResponse'
+
+    ReorderFolderRequest:
+      type: object
+      required: [folderIds]
+      properties:
+        folderIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    # ─── Request ───
+    CreateRequestRequest:
+      type: object
+      required: [folderId, name, method, url]
+      properties:
+        folderId:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 2000
+        method:
+          $ref: '#/components/schemas/HttpMethod'
+        url:
+          type: string
+          maxLength: 2000
+        sortOrder:
+          type: integer
+
+    UpdateRequestRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        method:
+          $ref: '#/components/schemas/HttpMethod'
+        url:
+          type: string
+        sortOrder:
+          type: integer
+
+    RequestResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        folderId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        method:
+          $ref: '#/components/schemas/HttpMethod'
+        url:
+          type: string
+        sortOrder:
+          type: integer
+        headers:
+          type: array
+          items:
+            $ref: '#/components/schemas/RequestHeaderResponse'
+        params:
+          type: array
+          items:
+            $ref: '#/components/schemas/RequestParamResponse'
+        body:
+          $ref: '#/components/schemas/RequestBodyResponse'
+        auth:
+          $ref: '#/components/schemas/RequestAuthResponse'
+        scripts:
+          type: array
+          items:
+            $ref: '#/components/schemas/RequestScriptResponse'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    RequestSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        method:
+          $ref: '#/components/schemas/HttpMethod'
+        url:
+          type: string
+        sortOrder:
+          type: integer
+
+    RequestHeaderResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        headerKey:
+          type: string
+        headerValue:
+          type: string
+        description:
+          type: string
+        isEnabled:
+          type: boolean
+
+    RequestParamResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        paramKey:
+          type: string
+        paramValue:
+          type: string
+        description:
+          type: string
+        isEnabled:
+          type: boolean
+
+    RequestBodyResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        bodyType:
+          $ref: '#/components/schemas/BodyType'
+        rawContent:
+          type: string
+        formData:
+          type: string
+        graphqlQuery:
+          type: string
+        graphqlVariables:
+          type: string
+        binaryFileName:
+          type: string
+
+    RequestAuthResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        authType:
+          $ref: '#/components/schemas/AuthType'
+        apiKeyHeader:
+          type: string
+        apiKeyValue:
+          type: string
+        apiKeyAddTo:
+          type: string
+        bearerToken:
+          type: string
+        basicUsername:
+          type: string
+        basicPassword:
+          type: string
+        oauth2GrantType:
+          type: string
+        oauth2AuthUrl:
+          type: string
+        oauth2TokenUrl:
+          type: string
+        oauth2ClientId:
+          type: string
+        oauth2ClientSecret:
+          type: string
+        oauth2Scope:
+          type: string
+        oauth2CallbackUrl:
+          type: string
+        oauth2AccessToken:
+          type: string
+        jwtSecret:
+          type: string
+        jwtPayload:
+          type: string
+        jwtAlgorithm:
+          type: string
+
+    RequestScriptResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        scriptType:
+          $ref: '#/components/schemas/ScriptType'
+        content:
+          type: string
+
+    SaveRequestHeadersRequest:
+      type: object
+      required: [headers]
+      properties:
+        headers:
+          type: array
+          items:
+            type: object
+            properties:
+              headerKey:
+                type: string
+              headerValue:
+                type: string
+              description:
+                type: string
+              isEnabled:
+                type: boolean
+
+    SaveRequestParamsRequest:
+      type: object
+      required: [params]
+      properties:
+        params:
+          type: array
+          items:
+            type: object
+            properties:
+              paramKey:
+                type: string
+              paramValue:
+                type: string
+              description:
+                type: string
+              isEnabled:
+                type: boolean
+
+    SaveRequestBodyRequest:
+      type: object
+      required: [bodyType]
+      properties:
+        bodyType:
+          $ref: '#/components/schemas/BodyType'
+        rawContent:
+          type: string
+        formData:
+          type: string
+        graphqlQuery:
+          type: string
+        graphqlVariables:
+          type: string
+        binaryFileName:
+          type: string
+
+    SaveRequestAuthRequest:
+      type: object
+      required: [authType]
+      properties:
+        authType:
+          $ref: '#/components/schemas/AuthType'
+        apiKeyHeader:
+          type: string
+        apiKeyValue:
+          type: string
+        apiKeyAddTo:
+          type: string
+        bearerToken:
+          type: string
+        basicUsername:
+          type: string
+        basicPassword:
+          type: string
+        oauth2GrantType:
+          type: string
+        oauth2AuthUrl:
+          type: string
+        oauth2TokenUrl:
+          type: string
+        oauth2ClientId:
+          type: string
+        oauth2ClientSecret:
+          type: string
+        oauth2Scope:
+          type: string
+        oauth2CallbackUrl:
+          type: string
+        oauth2AccessToken:
+          type: string
+        jwtSecret:
+          type: string
+        jwtPayload:
+          type: string
+        jwtAlgorithm:
+          type: string
+
+    SaveRequestScriptRequest:
+      type: object
+      required: [scriptType]
+      properties:
+        scriptType:
+          $ref: '#/components/schemas/ScriptType'
+        content:
+          type: string
+
+    DuplicateRequestRequest:
+      type: object
+      properties:
+        targetFolderId:
+          type: string
+          format: uuid
+        name:
+          type: string
+
+    ReorderRequestRequest:
+      type: object
+      required: [requestIds]
+      properties:
+        requestIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    # ─── Environment ───
+    CreateEnvironmentRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 2000
+
+    UpdateEnvironmentRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 2000
+
+    CloneEnvironmentRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+
+    EnvironmentResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        teamId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        isActive:
+          type: boolean
+        variableCount:
+          type: integer
+        createdBy:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    EnvironmentVariableResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        variableKey:
+          type: string
+        variableValue:
+          type: string
+        isSecret:
+          type: boolean
+        isEnabled:
+          type: boolean
+        scope:
+          type: string
+
+    SaveEnvironmentVariablesRequest:
+      type: object
+      required: [variables]
+      properties:
+        variables:
+          type: array
+          items:
+            type: object
+            properties:
+              variableKey:
+                type: string
+              variableValue:
+                type: string
+              isSecret:
+                type: boolean
+              isEnabled:
+                type: boolean
+
+    # ─── Global Variables ───
+    GlobalVariableResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        teamId:
+          type: string
+          format: uuid
+        variableKey:
+          type: string
+        variableValue:
+          type: string
+        isSecret:
+          type: boolean
+        isEnabled:
+          type: boolean
+
+    SaveGlobalVariableRequest:
+      type: object
+      required: [variableKey]
+      properties:
+        variableKey:
+          type: string
+        variableValue:
+          type: string
+        isSecret:
+          type: boolean
+        isEnabled:
+          type: boolean
+
+    BatchSaveGlobalVariablesRequest:
+      type: object
+      required: [variables]
+      properties:
+        variables:
+          type: array
+          items:
+            $ref: '#/components/schemas/SaveGlobalVariableRequest'
+
+    # ─── Proxy ───
+    SendRequestProxyRequest:
+      type: object
+      required: [method, url]
+      properties:
+        method:
+          $ref: '#/components/schemas/HttpMethod'
+        url:
+          type: string
+        headers:
+          type: array
+          items:
+            type: object
+            properties:
+              headerKey:
+                type: string
+              headerValue:
+                type: string
+              isEnabled:
+                type: boolean
+        body:
+          type: string
+        bodyType:
+          $ref: '#/components/schemas/BodyType'
+        authConfig:
+          type: string
+        environmentId:
+          type: string
+          format: uuid
+        saveToHistory:
+          type: boolean
+          default: true
+        timeoutMs:
+          type: integer
+          default: 30000
+        followRedirects:
+          type: boolean
+          default: true
+
+    ProxyResponse:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+        statusText:
+          type: string
+        headers:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+        responseBody:
+          type: string
+        responseTimeMs:
+          type: integer
+          format: int64
+        responseSizeBytes:
+          type: integer
+          format: int64
+        contentType:
+          type: string
+        redirectChain:
+          type: array
+          items:
+            type: string
+        historyId:
+          type: string
+          format: uuid
+
+    # ─── History ───
+    RequestHistoryResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        requestMethod:
+          $ref: '#/components/schemas/HttpMethod'
+        requestUrl:
+          type: string
+        responseStatus:
+          type: integer
+        responseTimeMs:
+          type: integer
+          format: int64
+        responseSizeBytes:
+          type: integer
+          format: int64
+        contentType:
+          type: string
+        collectionId:
+          type: string
+          format: uuid
+        requestId:
+          type: string
+          format: uuid
+        environmentId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+
+    RequestHistoryDetailResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        requestMethod:
+          $ref: '#/components/schemas/HttpMethod'
+        requestUrl:
+          type: string
+        requestHeaders:
+          type: string
+        requestBody:
+          type: string
+        responseStatus:
+          type: integer
+        responseHeaders:
+          type: string
+        responseBody:
+          type: string
+        responseSizeBytes:
+          type: integer
+          format: int64
+        responseTimeMs:
+          type: integer
+          format: int64
+        contentType:
+          type: string
+        collectionId:
+          type: string
+          format: uuid
+        requestId:
+          type: string
+          format: uuid
+        environmentId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+
+    # ─── Share ───
+    ShareCollectionRequest:
+      type: object
+      required: [sharedWithUserId, permission]
+      properties:
+        sharedWithUserId:
+          type: string
+          format: uuid
+        permission:
+          $ref: '#/components/schemas/SharePermission'
+
+    UpdateSharePermissionRequest:
+      type: object
+      required: [permission]
+      properties:
+        permission:
+          $ref: '#/components/schemas/SharePermission'
+
+    CollectionShareResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        collectionId:
+          type: string
+          format: uuid
+        sharedWithUserId:
+          type: string
+          format: uuid
+        sharedByUserId:
+          type: string
+          format: uuid
+        permission:
+          $ref: '#/components/schemas/SharePermission'
+        createdAt:
+          type: string
+          format: date-time
+
+    # ─── Fork ───
+    CreateForkRequest:
+      type: object
+      properties:
+        label:
+          type: string
+
+    ForkResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sourceCollectionId:
+          type: string
+          format: uuid
+        forkedCollectionId:
+          type: string
+          format: uuid
+        forkedByUserId:
+          type: string
+          format: uuid
+        forkedAt:
+          type: string
+          format: date-time
+        label:
+          type: string
+
+    # ─── Import/Export ───
+    ImportCollectionRequest:
+      type: object
+      required: [format, content]
+      properties:
+        format:
+          type: string
+          enum: [postman, openapi, openapi-yaml, curl, auto]
+        content:
+          type: string
+
+    ImportResultResponse:
+      type: object
+      properties:
+        collectionId:
+          type: string
+          format: uuid
+        collectionName:
+          type: string
+        foldersImported:
+          type: integer
+        requestsImported:
+          type: integer
+        environmentsImported:
+          type: integer
+        warnings:
+          type: array
+          items:
+            type: string
+
+    ExportCollectionResponse:
+      type: object
+      properties:
+        format:
+          type: string
+        content:
+          type: string
+        filename:
+          type: string
+
+    # ─── GraphQL ───
+    ExecuteGraphQLRequest:
+      type: object
+      required: [url, query]
+      properties:
+        url:
+          type: string
+        query:
+          type: string
+        variables:
+          type: string
+        operationName:
+          type: string
+        headers:
+          type: array
+          items:
+            type: object
+            properties:
+              headerKey:
+                type: string
+              headerValue:
+                type: string
+              isEnabled:
+                type: boolean
+        authConfig:
+          type: string
+        environmentId:
+          type: string
+          format: uuid
+
+    IntrospectGraphQLRequest:
+      type: object
+      required: [url]
+      properties:
+        url:
+          type: string
+        headers:
+          type: array
+          items:
+            type: object
+            properties:
+              headerKey:
+                type: string
+              headerValue:
+                type: string
+              isEnabled:
+                type: boolean
+        authConfig:
+          type: string
+
+    GraphQLResponse:
+      type: object
+      properties:
+        httpResponse:
+          $ref: '#/components/schemas/ProxyResponse'
+        schema:
+          type: string
+
+    # ─── Runner ───
+    StartCollectionRunRequest:
+      type: object
+      required: [collectionId]
+      properties:
+        collectionId:
+          type: string
+          format: uuid
+        environmentId:
+          type: string
+          format: uuid
+        iterationCount:
+          type: integer
+          minimum: 1
+          default: 1
+        delayBetweenRequestsMs:
+          type: integer
+          minimum: 0
+          default: 0
+        dataFile:
+          type: string
+        dataFileContent:
+          type: string
+
+    RunResultResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        teamId:
+          type: string
+          format: uuid
+        collectionId:
+          type: string
+          format: uuid
+        environmentId:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/RunStatus'
+        totalRequests:
+          type: integer
+        passedRequests:
+          type: integer
+        failedRequests:
+          type: integer
+        totalAssertions:
+          type: integer
+        passedAssertions:
+          type: integer
+        failedAssertions:
+          type: integer
+        totalDurationMs:
+          type: integer
+          format: int64
+        iterationCount:
+          type: integer
+        delayBetweenRequestsMs:
+          type: integer
+        dataFilename:
+          type: string
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        startedByUserId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+
+    RunResultDetailResponse:
+      type: object
+      properties:
+        summary:
+          $ref: '#/components/schemas/RunResultResponse'
+        iterations:
+          type: array
+          items:
+            $ref: '#/components/schemas/RunIterationResponse'
+
+    RunIterationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        iterationNumber:
+          type: integer
+        requestName:
+          type: string
+        requestMethod:
+          $ref: '#/components/schemas/HttpMethod'
+        requestUrl:
+          type: string
+        responseStatus:
+          type: integer
+        responseTimeMs:
+          type: integer
+          format: int64
+        responseSizeBytes:
+          type: integer
+          format: int64
+        passed:
+          type: boolean
+        assertionResults:
+          type: string
+        errorMessage:
+          type: string
+
+    # ─── Code Generation ───
+    GenerateCodeRequest:
+      type: object
+      required: [requestId, language]
+      properties:
+        requestId:
+          type: string
+          format: uuid
+        language:
+          $ref: '#/components/schemas/CodeLanguage'
+        environmentId:
+          type: string
+          format: uuid
+
+    CodeSnippetResponse:
+      type: object
+      properties:
+        language:
+          $ref: '#/components/schemas/CodeLanguage'
+        displayName:
+          type: string
+        code:
+          type: string
+        fileExtension:
+          type: string
+        contentType:
+          type: string
+
+    # ─── Merge ───
+    CreateMergeRequestRequest:
+      type: object
+      required: [forkId, title]
+      properties:
+        forkId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+
+    ResolveMergeRequest:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [MERGE, CLOSE]
+
+    MergeRequestResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sourceForkId:
+          type: string
+          format: uuid
+        targetCollectionId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        requestedByUserId:
+          type: string
+          format: uuid
+        reviewedByUserId:
+          type: string
+          format: uuid
+        mergedAt:
+          type: string
+          format: date-time
+        conflictDetails:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    # ─── Pagination ───
+    PageResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items: {}
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+        last:
+          type: boolean
+
+    # ─── Enums ───
+    AuthType:
+      type: string
+      enum:
+        - NO_AUTH
+        - API_KEY
+        - BEARER_TOKEN
+        - BASIC_AUTH
+        - OAUTH2_AUTHORIZATION_CODE
+        - OAUTH2_CLIENT_CREDENTIALS
+        - OAUTH2_IMPLICIT
+        - OAUTH2_PASSWORD
+        - JWT_BEARER
+        - INHERIT_FROM_PARENT
+
+    BodyType:
+      type: string
+      enum:
+        - NONE
+        - FORM_DATA
+        - X_WWW_FORM_URLENCODED
+        - RAW_JSON
+        - RAW_XML
+        - RAW_HTML
+        - RAW_TEXT
+        - RAW_YAML
+        - BINARY
+        - GRAPHQL
+
+    HttpMethod:
+      type: string
+      enum: [GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS]
+
+    CodeLanguage:
+      type: string
+      enum:
+        - CURL
+        - PYTHON_REQUESTS
+        - JAVASCRIPT_FETCH
+        - JAVASCRIPT_AXIOS
+        - JAVA_HTTP_CLIENT
+        - JAVA_OKHTTP
+        - CSHARP_HTTP_CLIENT
+        - GO
+        - RUBY
+        - PHP
+        - SWIFT
+        - KOTLIN
+
+    RunStatus:
+      type: string
+      enum: [PENDING, RUNNING, COMPLETED, FAILED, CANCELLED]
+
+    ScriptType:
+      type: string
+      enum: [PRE_REQUEST, POST_RESPONSE]
+
+    SharePermission:
+      type: string
+      enum: [VIEWER, EDITOR, ADMIN]
+
+paths:
+  # ─── Health ───
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      security: []
+      operationId: health
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+
+  # ─── Collections ───
+  /collections:
+    post:
+      tags: [Collections]
+      summary: Create collection
+      operationId: createCollection
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCollectionRequest'
+      responses:
+        '201':
+          description: Collection created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      tags: [Collections]
+      summary: List collections
+      operationId: getCollections
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+      responses:
+        '200':
+          description: List of collections
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CollectionSummaryResponse'
+
+  /collections/paged:
+    get:
+      tags: [Collections]
+      summary: List collections (paginated)
+      operationId: getCollectionsPaged
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+      responses:
+        '200':
+          description: Paginated collections
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageResponse'
+
+  /collections/search:
+    get:
+      tags: [Collections]
+      summary: Search collections by name
+      operationId: searchCollections
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Matching collections
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CollectionSummaryResponse'
+
+  /collections/{collectionId}:
+    get:
+      tags: [Collections]
+      summary: Get collection
+      operationId: getCollection
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: collectionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Collection details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags: [Collections]
+      summary: Update collection
+      operationId: updateCollection
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: collectionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCollectionRequest'
+      responses:
+        '200':
+          description: Updated collection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionResponse'
+    delete:
+      tags: [Collections]
+      summary: Delete collection
+      operationId: deleteCollection
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: collectionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Deleted
+
+  /collections/{collectionId}/duplicate:
+    post:
+      tags: [Collections]
+      summary: Duplicate collection
+      operationId: duplicateCollection
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: collectionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '201':
+          description: Duplicated collection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionResponse'
+
+  /collections/{collectionId}/fork:
+    post:
+      tags: [Collections]
+      summary: Fork collection
+      operationId: forkCollection
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: collectionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateForkRequest'
+      responses:
+        '201':
+          description: Fork created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForkResponse'
+
+  /collections/{collectionId}/forks:
+    get:
+      tags: [Collections]
+      summary: List forks of collection
+      operationId: getCollectionForks
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: collectionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of forks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ForkResponse'
+
+  /collections/{collectionId}/export/{format}:
+    get:
+      tags: [Collections]
+      summary: Export collection
+      operationId: exportCollection
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: collectionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: format
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [postman, openapi, native]
+      responses:
+        '200':
+          description: Exported collection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportCollectionResponse'
+
+  /collections/{collectionId}/tree:
+    get:
+      tags: [Collections]
+      summary: Get collection folder tree
+      operationId: getCollectionTree
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: collectionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Folder tree
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FolderTreeResponse'
+
+  /collections/{collectionId}/shares:
+    post:
+      tags: [Sharing]
+      summary: Share collection with user
+      operationId: shareCollection
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: collectionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShareCollectionRequest'
+      responses:
+        '201':
+          description: Share created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionShareResponse'
+    get:
+      tags: [Sharing]
+      summary: List shares for collection
+      operationId: getCollectionShares
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: collectionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of shares
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CollectionShareResponse'
+
+  /collections/{collectionId}/shares/{sharedWithUserId}:
+    put:
+      tags: [Sharing]
+      summary: Update share permission
+      operationId: updateSharePermission
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: collectionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: sharedWithUserId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSharePermissionRequest'
+      responses:
+        '200':
+          description: Updated share
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionShareResponse'
+    delete:
+      tags: [Sharing]
+      summary: Revoke share
+      operationId: revokeShare
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: collectionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: sharedWithUserId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Share revoked
+
+  /shared-with-me:
+    get:
+      tags: [Sharing]
+      summary: Get collections shared with current user
+      operationId: getSharedWithMe
+      responses:
+        '200':
+          description: Shared collections
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CollectionShareResponse'
+
+  # ─── Folders ───
+  /folders:
+    post:
+      tags: [Folders]
+      summary: Create folder
+      operationId: createFolder
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFolderRequest'
+      responses:
+        '201':
+          description: Folder created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FolderResponse'
+
+  /folders/reorder:
+    put:
+      tags: [Folders]
+      summary: Reorder folders
+      operationId: reorderFolders
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReorderFolderRequest'
+      responses:
+        '200':
+          description: Reordered folders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FolderResponse'
+
+  /folders/{folderId}:
+    get:
+      tags: [Folders]
+      summary: Get folder
+      operationId: getFolder
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: folderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Folder details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FolderResponse'
+    put:
+      tags: [Folders]
+      summary: Update folder
+      operationId: updateFolder
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: folderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFolderRequest'
+      responses:
+        '200':
+          description: Updated folder
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FolderResponse'
+    delete:
+      tags: [Folders]
+      summary: Delete folder
+      operationId: deleteFolder
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: folderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Deleted
+
+  /folders/{folderId}/subfolders:
+    get:
+      tags: [Folders]
+      summary: Get subfolders
+      operationId: getSubFolders
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: folderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Subfolders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FolderResponse'
+
+  /folders/{folderId}/requests:
+    get:
+      tags: [Folders]
+      summary: Get requests in folder
+      operationId: getRequestsInFolder
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: folderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Requests in folder
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RequestSummaryResponse'
+
+  /folders/{folderId}/move:
+    put:
+      tags: [Folders]
+      summary: Move folder
+      operationId: moveFolder
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: folderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: newParentFolderId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Moved folder
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FolderResponse'
+
+  # ─── Requests ───
+  /requests:
+    post:
+      tags: [Requests]
+      summary: Create request
+      operationId: createRequest
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRequestRequest'
+      responses:
+        '201':
+          description: Request created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestResponse'
+
+  /requests/reorder:
+    put:
+      tags: [Requests]
+      summary: Reorder requests
+      operationId: reorderRequests
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReorderRequestRequest'
+      responses:
+        '200':
+          description: Reordered requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RequestSummaryResponse'
+
+  /requests/{requestId}:
+    get:
+      tags: [Requests]
+      summary: Get request with all components
+      operationId: getRequest
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Full request details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestResponse'
+    put:
+      tags: [Requests]
+      summary: Update request
+      operationId: updateRequest
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRequestRequest'
+      responses:
+        '200':
+          description: Updated request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestResponse'
+    delete:
+      tags: [Requests]
+      summary: Delete request
+      operationId: deleteRequest
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Deleted
+
+  /requests/{requestId}/duplicate:
+    post:
+      tags: [Requests]
+      summary: Duplicate request
+      operationId: duplicateRequest
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DuplicateRequestRequest'
+      responses:
+        '201':
+          description: Duplicated request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestResponse'
+
+  /requests/{requestId}/move:
+    put:
+      tags: [Requests]
+      summary: Move request to folder
+      operationId: moveRequest
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: targetFolderId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Moved request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestResponse'
+
+  /requests/{requestId}/headers:
+    put:
+      tags: [Requests]
+      summary: Save request headers
+      operationId: saveHeaders
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveRequestHeadersRequest'
+      responses:
+        '200':
+          description: Saved headers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RequestHeaderResponse'
+
+  /requests/{requestId}/params:
+    put:
+      tags: [Requests]
+      summary: Save request parameters
+      operationId: saveParams
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveRequestParamsRequest'
+      responses:
+        '200':
+          description: Saved parameters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RequestParamResponse'
+
+  /requests/{requestId}/body:
+    put:
+      tags: [Requests]
+      summary: Save request body
+      operationId: saveBody
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveRequestBodyRequest'
+      responses:
+        '200':
+          description: Saved body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestBodyResponse'
+
+  /requests/{requestId}/auth:
+    put:
+      tags: [Requests]
+      summary: Save request auth
+      operationId: saveAuth
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveRequestAuthRequest'
+      responses:
+        '200':
+          description: Saved auth
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestAuthResponse'
+
+  /requests/{requestId}/scripts:
+    put:
+      tags: [Requests]
+      summary: Save request script
+      operationId: saveScript
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveRequestScriptRequest'
+      responses:
+        '200':
+          description: Saved script
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestScriptResponse'
+
+  /requests/{requestId}/send:
+    post:
+      tags: [Requests]
+      summary: Execute stored request
+      operationId: sendStoredRequest
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: environmentId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Proxy response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProxyResponse'
+
+  # ─── Environments ───
+  /environments:
+    post:
+      tags: [Environments]
+      summary: Create environment
+      operationId: createEnvironment
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEnvironmentRequest'
+      responses:
+        '201':
+          description: Environment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentResponse'
+    get:
+      tags: [Environments]
+      summary: List environments
+      operationId: getEnvironments
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+      responses:
+        '200':
+          description: Environments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EnvironmentResponse'
+
+  /environments/active:
+    get:
+      tags: [Environments]
+      summary: Get active environment
+      operationId: getActiveEnvironment
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+      responses:
+        '200':
+          description: Active environment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentResponse'
+
+  /environments/{environmentId}:
+    get:
+      tags: [Environments]
+      summary: Get environment
+      operationId: getEnvironment
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: environmentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Environment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentResponse'
+    put:
+      tags: [Environments]
+      summary: Update environment
+      operationId: updateEnvironment
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: environmentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEnvironmentRequest'
+      responses:
+        '200':
+          description: Updated environment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentResponse'
+    delete:
+      tags: [Environments]
+      summary: Delete environment
+      operationId: deleteEnvironment
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: environmentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Deleted
+
+  /environments/{environmentId}/activate:
+    put:
+      tags: [Environments]
+      summary: Activate environment
+      operationId: activateEnvironment
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: environmentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Activated environment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentResponse'
+
+  /environments/{environmentId}/clone:
+    post:
+      tags: [Environments]
+      summary: Clone environment
+      operationId: cloneEnvironment
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: environmentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CloneEnvironmentRequest'
+      responses:
+        '201':
+          description: Cloned environment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentResponse'
+
+  /environments/{environmentId}/variables:
+    get:
+      tags: [Environments]
+      summary: Get environment variables
+      operationId: getEnvironmentVariables
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: environmentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Environment variables
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EnvironmentVariableResponse'
+    put:
+      tags: [Environments]
+      summary: Save environment variables
+      operationId: saveEnvironmentVariables
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: environmentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveEnvironmentVariablesRequest'
+      responses:
+        '200':
+          description: Saved variables
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EnvironmentVariableResponse'
+
+  # ─── Global Variables ───
+  /variables/global:
+    get:
+      tags: [Variables]
+      summary: Get global variables
+      operationId: getGlobalVariables
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+      responses:
+        '200':
+          description: Global variables
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GlobalVariableResponse'
+    post:
+      tags: [Variables]
+      summary: Save global variable
+      operationId: saveGlobalVariable
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveGlobalVariableRequest'
+      responses:
+        '200':
+          description: Saved variable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GlobalVariableResponse'
+
+  /variables/global/batch:
+    post:
+      tags: [Variables]
+      summary: Batch save global variables
+      operationId: batchSaveGlobalVariables
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchSaveGlobalVariablesRequest'
+      responses:
+        '200':
+          description: Saved variables
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GlobalVariableResponse'
+
+  /variables/global/{variableId}:
+    delete:
+      tags: [Variables]
+      summary: Delete global variable
+      operationId: deleteGlobalVariable
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: variableId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Deleted
+
+  # ─── Proxy ───
+  /proxy/send:
+    post:
+      tags: [Proxy]
+      summary: Execute HTTP request via proxy
+      operationId: sendRequest
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendRequestProxyRequest'
+      responses:
+        '200':
+          description: Proxy response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProxyResponse'
+
+  /proxy/send/{requestId}:
+    post:
+      tags: [Proxy]
+      summary: Execute stored request via proxy
+      operationId: executeStoredRequest
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: environmentId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Proxy response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProxyResponse'
+
+  # ─── History ───
+  /history:
+    get:
+      tags: [History]
+      summary: Get request history (paginated)
+      operationId: getHistory
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+      responses:
+        '200':
+          description: Paginated history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageResponse'
+    delete:
+      tags: [History]
+      summary: Clear team history
+      operationId: clearHistory
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: daysToRetain
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: History cleared
+
+  /history/search:
+    get:
+      tags: [History]
+      summary: Search history by URL
+      operationId: searchHistory
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Matching history entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RequestHistoryResponse'
+
+  /history/user/{userId}:
+    get:
+      tags: [History]
+      summary: Get user's history
+      operationId: getUserHistory
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+      responses:
+        '200':
+          description: User's history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageResponse'
+
+  /history/method/{method}:
+    get:
+      tags: [History]
+      summary: Get history filtered by HTTP method
+      operationId: getHistoryByMethod
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: method
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/HttpMethod'
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+      responses:
+        '200':
+          description: Method-filtered history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageResponse'
+
+  /history/{historyId}:
+    get:
+      tags: [History]
+      summary: Get history entry detail
+      operationId: getHistoryDetail
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: historyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Full history detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestHistoryDetailResponse'
+    delete:
+      tags: [History]
+      summary: Delete history entry
+      operationId: deleteHistory
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: historyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Deleted
+
+  # ─── Import ───
+  /import/postman:
+    post:
+      tags: [Import]
+      summary: Import Postman collection
+      operationId: importPostman
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportCollectionRequest'
+      responses:
+        '201':
+          description: Import result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportResultResponse'
+
+  /import/openapi:
+    post:
+      tags: [Import]
+      summary: Import OpenAPI spec
+      operationId: importOpenApi
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportCollectionRequest'
+      responses:
+        '201':
+          description: Import result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportResultResponse'
+
+  /import/curl:
+    post:
+      tags: [Import]
+      summary: Import cURL command
+      operationId: importCurl
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportCollectionRequest'
+      responses:
+        '201':
+          description: Import result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportResultResponse'
+
+  # ─── GraphQL ───
+  /graphql/execute:
+    post:
+      tags: [GraphQL]
+      summary: Execute GraphQL query
+      operationId: executeQuery
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExecuteGraphQLRequest'
+      responses:
+        '200':
+          description: GraphQL response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GraphQLResponse'
+
+  /graphql/introspect:
+    post:
+      tags: [GraphQL]
+      summary: Introspect GraphQL endpoint
+      operationId: introspect
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IntrospectGraphQLRequest'
+      responses:
+        '200':
+          description: Introspection response with schema
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GraphQLResponse'
+
+  /graphql/validate:
+    post:
+      tags: [GraphQL]
+      summary: Validate GraphQL query syntax
+      operationId: validateQuery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                query:
+                  type: string
+      responses:
+        '200':
+          description: Validation errors (empty if valid)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  /graphql/format:
+    post:
+      tags: [GraphQL]
+      summary: Format/prettify GraphQL query
+      operationId: formatQuery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                query:
+                  type: string
+      responses:
+        '200':
+          description: Formatted query
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  query:
+                    type: string
+
+  # ─── Runner ───
+  /runner/start:
+    post:
+      tags: [Runner]
+      summary: Start collection run
+      operationId: startRun
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartCollectionRunRequest'
+      responses:
+        '201':
+          description: Run started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunResultDetailResponse'
+
+  /runner/results:
+    get:
+      tags: [Runner]
+      summary: Get run results (paginated)
+      operationId: getRunResults
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+      responses:
+        '200':
+          description: Paginated run results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageResponse'
+
+  /runner/results/collection/{collectionId}:
+    get:
+      tags: [Runner]
+      summary: Get run results by collection
+      operationId: getRunResultsByCollection
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: collectionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Run results for collection
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RunResultResponse'
+
+  /runner/results/{runResultId}:
+    get:
+      tags: [Runner]
+      summary: Get run result summary
+      operationId: getRunResult
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: runResultId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Run result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunResultResponse'
+    delete:
+      tags: [Runner]
+      summary: Delete run result
+      operationId: deleteRunResult
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: runResultId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Deleted
+
+  /runner/results/{runResultId}/detail:
+    get:
+      tags: [Runner]
+      summary: Get run result with iterations
+      operationId: getRunResultDetail
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: runResultId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Detailed run result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunResultDetailResponse'
+
+  /runner/results/{runResultId}/cancel:
+    post:
+      tags: [Runner]
+      summary: Cancel running collection run
+      operationId: cancelRun
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+        - name: runResultId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Cancelled run
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunResultResponse'
+
+  # ─── Code Generation ───
+  /codegen/generate:
+    post:
+      tags: [CodeGeneration]
+      summary: Generate code snippet
+      operationId: generate
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateCodeRequest'
+      responses:
+        '200':
+          description: Code snippet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodeSnippetResponse'
+
+  /codegen/generate/all:
+    post:
+      tags: [CodeGeneration]
+      summary: Generate code snippets for all languages
+      operationId: generateAll
+      parameters:
+        - $ref: '#/components/parameters/TeamIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateCodeRequest'
+      responses:
+        '200':
+          description: Code snippets for all languages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CodeSnippetResponse'
+
+  /codegen/languages:
+    get:
+      tags: [CodeGeneration]
+      summary: Get available languages
+      operationId: getLanguages
+      responses:
+        '200':
+          description: Available languages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CodeSnippetResponse'
