@@ -17,4 +17,6 @@ public interface FolderRepository extends JpaRepository<Folder, UUID> {
     List<Folder> findByCollectionIdAndParentFolderIsNullOrderBySortOrder(UUID collectionId);
 
     long countByCollectionId(UUID collectionId);
+
+    long countByParentFolderId(UUID parentFolderId);
 }
