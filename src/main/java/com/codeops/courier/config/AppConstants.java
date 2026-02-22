@@ -25,4 +25,25 @@ public final class AppConstants {
 
     /** Service name used in health checks and structured logging. */
     public static final String SERVICE_NAME = "codeops-courier";
+
+    /** Default HTTP request timeout in milliseconds (30 seconds). */
+    public static final int DEFAULT_TIMEOUT_MS = 30000;
+
+    /** Maximum allowed HTTP request timeout in milliseconds (5 minutes). */
+    public static final int MAX_TIMEOUT_MS = 300000;
+
+    /** Minimum allowed HTTP request timeout in milliseconds (1 second). */
+    public static final int MIN_TIMEOUT_MS = 1000;
+
+    /** Maximum number of HTTP redirects to follow before stopping. */
+    public static final int MAX_REDIRECT_COUNT = 10;
+
+    /** Maximum response body size to capture in bytes (10 MB). */
+    public static final int MAX_RESPONSE_BODY_SIZE = 10 * 1024 * 1024;
+
+    /** Maximum response body size to store in history in bytes (1 MB). */
+    public static final int HISTORY_BODY_TRUNCATE_SIZE = 1024 * 1024;
+
+    /** User-Agent header value for outgoing proxy requests. */
+    public static final String USER_AGENT = "CodeOps-Courier/1.0";
 }
