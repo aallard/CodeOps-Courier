@@ -46,4 +46,16 @@ public final class AppConstants {
 
     /** User-Agent header value for outgoing proxy requests. */
     public static final String USER_AGENT = "CodeOps-Courier/1.0";
+
+    /** Maximum script execution time in seconds before timeout. */
+    public static final int SCRIPT_TIMEOUT_SECONDS = 5;
+
+    /** Maximum number of JavaScript statements a script may execute. */
+    public static final int SCRIPT_MAX_STATEMENTS = 100000;
+
+    /** Maximum number of console output lines captured from a script. */
+    public static final int SCRIPT_MAX_CONSOLE_LINES = 1000;
+
+    /** Maximum total script output size in bytes (1 MB). */
+    public static final int SCRIPT_MAX_OUTPUT_SIZE = 1024 * 1024;
 }
